@@ -1,0 +1,25 @@
+[project]
+name = "medilingua-backend"
+version = "0.1.0"
+description = "Compliance-First Localization Engine for Medical Devices"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "python-multipart>=0.0.9",  # Required for file uploads
+    "httpx>=0.27.0",            # For robust external requests
+    "tenacity>=8.2.0",          # For retry logic (Rule: All external calls have retries)
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.3.0",
+    "httpx>=0.27.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --strict-markers"
