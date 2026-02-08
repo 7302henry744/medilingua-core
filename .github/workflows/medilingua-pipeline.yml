@@ -62,11 +62,13 @@ jobs:
         if: always()
         run: make down
 
+  # ... (previous content remains the same) ...
+
   # ==============================================================================
   # JOB 2: Continuous Delivery (Artifact Generation)
   # ==============================================================================
   delivery:
-    name: Build & Push Artifacts
+    name: 📦 Build & Push Artifacts
     needs: compliance_check
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -82,15 +84,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # NEW STEP: Create a lowercase version of the owner name
+      - name: Lowercase Repository Owner
+        id: owner_lower
+        run: |
+          echo "owner_lower=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
+
       # BACKEND BUILD
       - name: Build and Push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
+          # Use the new env variable ${{ steps.owner_lower.outputs.owner_lower }} instead of ${{ github.repository_owner }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/medilingua-backend:latest
-            ghcr.io/${{ github.repository_owner }}/medilingua-backend:${{ github.sha }}
+            ghcr.io/${{ steps.owner_lower.outputs.owner_lower }}/medilingua-backend:latest
+            ghcr.io/${{ steps.owner_lower.outputs.owner_lower }}/medilingua-backend:${{ github.sha }}
 
       # FRONTEND BUILD
       - name: Build and Push Frontend
@@ -98,6 +107,7 @@ jobs:
         with:
           context: ./frontend
           push: true
+          # Use the new env variable ${{ steps.owner_lower.outputs.owner_lower }} instead of ${{ github.repository_owner }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/medilingua-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/medilingua-frontend:${{ github.sha }}
+            ghcr.io/${{ steps.owner_lower.outputs.owner_lower }}/medilingua-frontend:latest
+            ghcr.io/${{ steps.owner_lower.outputs.owner_lower }}/medilingua-frontend:${{ github.sha }}
