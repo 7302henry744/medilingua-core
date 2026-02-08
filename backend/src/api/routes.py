@@ -1,7 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from ..core.schemas import FileAnalysisResponse, AnalysisRequest, AnalysisResponse
+"""
+API Routes Definitions.
+Exposes endpoints for file analysis, width validation, and AI translation.
+"""
+from fastapi import APIRouter, UploadFile, File, HTTPException, Body
+from typing import List
+from ..core.schemas import FileAnalysisResponse, AnalysisRequest, AnalysisResponse, Segment
 from ..core.parser import XliffParser
 from ..core.engine import width_engine
+from ..core.ai import translator
 
 router = APIRouter()
 parser = XliffParser()
@@ -47,3 +53,30 @@ async def check_width(request: AnalysisRequest):
         width_px=width,
         safe=safe
     )
+
+@router.post("/translate-segments", response_model=List[Segment])
+async def translate_segments(segments: List[Segment] = Body(...)):
+    """
+    Batch processes segments:
+    1. Translate (Glossary -> AI)
+    2. Calculate new width for the TARGET text
+    3. Update Status based on 200px limit
+    """
+    processed = []
+    
+    for seg in segments:
+        # Perform Translation (Hybrid: Glossary First -> AI Second)
+        target = await translator.translate(seg.source_text)
+        seg.target_text = target
+        
+        # Calculate Width of the TARGET text (Visual Safety Check)
+        width = width_engine.calculate_width(target)
+        seg.width_px = width
+        
+        # Update Status (Mock limit 200px)
+        # If target width > 200px, we flag it as OVERFLOW
+        seg.status = "OVERFLOW" if width > 200 else "SAFE"
+        
+        processed.append(seg)
+        
+    return processed

@@ -11,7 +11,10 @@ dependencies = [
     "httpx>=0.27.0",            # For robust external requests
     "tenacity>=8.2.0",          # For retry logic (Rule: All external calls have retries)
     "lxml>=5.1.0",              # For XLIFF Parsing
-    "Pillow>=10.2.0"            # For Pixel Width Calculation
+    "Pillow>=10.2.0",           # For Pixel Width Calculation
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "python-dotenv>=1.0.0"
 ]
 
 [project.optional-dependencies]

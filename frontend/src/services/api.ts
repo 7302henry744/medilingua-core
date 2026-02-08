@@ -1,4 +1,4 @@
-import type { FileAnalysisResponse } from '../types';
+import type { FileAnalysisResponse, Segment } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -27,4 +27,21 @@ export async function checkHealth(): Promise<boolean> {
         console.error(e);
         return false;
     }
+}
+
+export async function translateSegments(segments: Segment[]): Promise<Segment[]> {
+    const response = await fetch(`${API_URL}/api/v1/translate-segments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(segments),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Translation failed');
+    }
+
+    return response.json();
 }
