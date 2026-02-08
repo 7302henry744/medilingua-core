@@ -1,0 +1,12 @@
+<xliff version="1.2">
+  <file original="sample.txt" source-language="en" target-language="fi">
+    <body>
+      <trans-unit id="1">
+        <source>START</source>
+      </trans-unit>
+      <trans-unit id="2">
+        <source>DO NOT RESUSCITATE - ADVANCED DIRECTIVE ON FILE</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

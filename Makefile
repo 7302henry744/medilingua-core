@@ -1,12 +1,12 @@
-.PHONY: setup up down build logs test clean
+.PHONY: setup install-frontend up down build logs test clean
 
 # ==============================================================================
 # Configuration & Paths
 # ==============================================================================
 # Main Production Compose File (Root)
 COMPOSE_FILE := docker-compose.yml
-BACKEND_DIR  := src/backend
-FRONTEND_DIR := src/frontend
+BACKEND_DIR  := backend
+FRONTEND_DIR := frontend
 PYTHON       := python
 
 # Copy env example to .env
@@ -14,8 +14,13 @@ setup:
 	cp .env.example .env
 	@echo "Environment file created. Please run 'make up'."
 
+# Install frontend dependencies
+install-frontend:
+	@echo "Installing Frontend Dependencies..."
+	cd $(FRONTEND_DIR) && npm install
+
 # Start the system
-up:
+up: install-frontend
 	@echo "Launching MediLingua-Core (Full Stack)..."
 	docker-compose -f $(COMPOSE_FILE) build --no-cache
 	docker-compose -f $(COMPOSE_FILE) up -d
