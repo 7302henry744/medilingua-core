@@ -40,16 +40,16 @@ build:
 logs:
 	docker-compose -f $(COMPOSE_FILE) logs -f
 
-# Test the system (both backend and frontend)
+# Test the system (both backend and frontend) inside Docker containers
 test: test-backend test-frontend
 
 test-backend:
-	@echo "🧪 Running Backend Tests..."
-	cd $(BACKEND_DIR) && pytest
+	@echo "🧪 Running Backend Tests (Inside Docker Container)..."
+	docker-compose -f $(COMPOSE_FILE) exec backend python -m pytest
 
 test-frontend:
-	@echo "🧪 Running Frontend Tests..."
-	cd $(FRONTEND_DIR) && npm test -- --run
+	@echo "🧪 Running Frontend Tests (Inside Docker Container)..."
+	docker-compose -f $(COMPOSE_FILE) exec frontend npm test -- --run
 
 # ==============================================================================
 # Maintenance & Debugging

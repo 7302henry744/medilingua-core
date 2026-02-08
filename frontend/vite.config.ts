@@ -5,11 +5,17 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // Needed for Docker mapping
+    host: true,
     port: 3000,
     strictPort: true,
     watch: {
-      usePolling: true // Needed for Windows/WSL Docker file watching
+      usePolling: true
     }
+  },
+  // @ts-ignore - Vitest types require setup but this works for runtime
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/tests/setup.ts'
   }
 })

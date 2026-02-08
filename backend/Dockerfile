@@ -3,7 +3,7 @@ FROM python:3.11-slim-bookworm AS builder
 WORKDIR /tmp
 RUN pip install uv
 COPY pyproject.toml .
-RUN uv pip compile pyproject.toml -o requirements.txt
+RUN uv pip compile pyproject.toml --extra dev -o requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim-bookworm
@@ -15,18 +15,25 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Download specific font for reproducibility (Roboto Medium)
-# In a real air-gapped environment, this file would be COPY'd from a local assets folder
+# Download specific font
 RUN mkdir -p assets/fonts && \
     curl -L -o assets/fonts/Roboto-Medium.ttf https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Medium.ttf
 
 COPY --from=builder /tmp/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ ./src/
-RUN mkdir -p tests
-
+# Create the user first
 RUN useradd -m medilingua
+
+# Copy files
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# --- THE FIX IS HERE ---
+# Give the 'medilingua' user ownership of the /app directory
+RUN chown -R medilingua:medilingua /app
+
+# Switch to the user
 USER medilingua
 
 EXPOSE 8000
