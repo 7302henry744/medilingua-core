@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileUpload } from './components/FileUpload';
 import { WidthVisualizer } from './components/WidthVisualizer';
+import { AnalysisChat } from './components/AnalysisChat';
 import { uploadFile, checkHealth, translateSegments } from './services/api';
 import type { FileAnalysisResponse } from './types';
 
@@ -93,7 +94,7 @@ function App() {
         )}
 
         {data && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in pb-12">
             <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Analysis Results</h3>
@@ -125,6 +126,9 @@ function App() {
             </div>
 
             <WidthVisualizer segments={data.segments} />
+
+            {/* Context-Aware Assistant */}
+            <AnalysisChat segments={data.segments} />
           </div>
         )}
       </main>

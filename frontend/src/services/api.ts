@@ -45,3 +45,20 @@ export async function translateSegments(segments: Segment[]): Promise<Segment[]>
 
     return response.json();
 }
+
+export async function askAssistant(question: string, segments: Segment[]): Promise<string> {
+    const response = await fetch(`${API_URL}/api/v1/explain-analysis`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question, segments }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Chat request failed');
+    }
+
+    const data = await response.json();
+    return data.reply;
+}

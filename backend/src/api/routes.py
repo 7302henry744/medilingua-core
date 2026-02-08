@@ -1,10 +1,17 @@
 """
 API Routes Definitions.
-Exposes endpoints for file analysis, width validation, and AI translation.
+Exposes endpoints for file analysis, width validation, AI translation, and context-aware explanations.
 """
 from fastapi import APIRouter, UploadFile, File, HTTPException, Body
 from typing import List
-from ..core.schemas import FileAnalysisResponse, AnalysisRequest, AnalysisResponse, Segment
+from ..core.schemas import (
+    FileAnalysisResponse, 
+    AnalysisRequest, 
+    AnalysisResponse, 
+    Segment,
+    ChatRequest, 
+    ChatResponse
+)
 from ..core.parser import XliffParser
 from ..core.engine import width_engine
 from ..core.ai import translator
@@ -80,3 +87,13 @@ async def translate_segments(segments: List[Segment] = Body(...)):
         processed.append(seg)
         
     return processed
+
+@router.post("/explain-analysis", response_model=ChatResponse)
+async def explain_analysis(request: ChatRequest):
+    """
+    Context-aware chat. 
+    Accepts the current list of segments and a user question.
+    Returns an AI-generated explanation of the analysis results.
+    """
+    reply = await translator.explain(request.segments, request.question)
+    return ChatResponse(reply=reply)

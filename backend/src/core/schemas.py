@@ -25,3 +25,12 @@ class FileAnalysisResponse(BaseModel):
     filename: str
     total_segments: int
     segments: List[Segment]
+
+class ChatRequest(BaseModel):
+    """Request model for the Context-Aware Assistant."""
+    question: str
+    segments: List[Segment]
+
+class ChatResponse(BaseModel):
+    """Response model for the Context-Aware Assistant."""
+    reply: str

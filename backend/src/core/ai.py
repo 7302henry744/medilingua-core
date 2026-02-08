@@ -1,9 +1,12 @@
 import os
 import time
+import json
+from typing import List
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from .glossary import lookup_term
+from .schemas import Segment
 
 # Load env vars
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -12,12 +15,14 @@ class AITranslator:
     def __init__(self):
         # If no key is provided, we default to Simulation Mode to prevent crashes
         self.use_mock = not bool(OPENAI_API_KEY)
+        
         if not self.use_mock:
-            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+            # Using gpt-4o-mini for cost-effective, high-quality reasoning
+            self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
             self.parser = StrOutputParser()
             
-            # Prompt Engineering: Enforce medical tone
-            template = """
+            # --- 1. Translation Pipeline ---
+            self.trans_template = """
             You are a medical localization expert for GE HealthCare. 
             Translate the following text from English to Finnish.
             
@@ -28,8 +33,27 @@ class AITranslator:
             
             Text: {text}
             """
-            self.prompt = ChatPromptTemplate.from_template(template)
-            self.chain = self.prompt | self.llm | self.parser
+            self.trans_prompt = ChatPromptTemplate.from_template(self.trans_template)
+            self.trans_chain = self.trans_prompt | self.llm | self.parser
+
+            # --- 2. Explanation Pipeline (Context-Aware) ---
+            self.explain_template = """
+            You are the MediLingua System Architect. You are analyzing a medical software localization session.
+            
+            Current Analysis Data (JSON):
+            {data}
+            
+            User Question: {question}
+            
+            Instructions:
+            - Answer based ONLY on the provided data.
+            - Explain WHY specific segments failed (mention specific pixel widths vs the 200px limit).
+            - If a safety term (like "STOP") was used, mention it came from the Glossary.
+            - Keep answers professional and brief.
+            """
+            self.explain_prompt = ChatPromptTemplate.from_template(self.explain_template)
+            self.explain_chain = self.explain_prompt | self.llm | self.parser
+            
         else:
             print("⚠️  WARNING: No OPENAI_API_KEY found. Running in SIMULATION MODE.")
 
@@ -48,14 +72,39 @@ class AITranslator:
         if self.use_mock:
             # Simulate network latency
             time.sleep(0.1) 
-            # Mock translation logic: Append [FI] and length simulation
+            # Mock translation logic: Append [FI]
             return f"[FI] {text}"
         
         try:
-            return await self.chain.ainvoke({"text": text})
+            return await self.trans_chain.ainvoke({"text": text})
         except Exception as e:
             print(f"AI Error: {e}")
             return f"[ERR] {text}"
+
+    async def explain(self, segments: List[Segment], question: str) -> str:
+        """
+        Analyzes the current state of segments to answer user questions.
+        """
+        if self.use_mock:
+            return "I am running in simulation mode. Connect an OpenAI API Key to chat with your data contextually."
+
+        # Serialize segments to simplified JSON for the LLM
+        # We limit fields to save tokens and focus attention on the safety metrics
+        context_data = json.dumps([
+            {
+                "id": s.id, 
+                "source": s.source_text, 
+                "target": s.target_text, 
+                "width": s.width_px, 
+                "status": s.status
+            } 
+            for s in segments
+        ], indent=2)
+
+        try:
+            return await self.explain_chain.ainvoke({"data": context_data, "question": question})
+        except Exception as e:
+            return f"Error generating explanation: {str(e)}"
 
 # Singleton
 translator = AITranslator()
