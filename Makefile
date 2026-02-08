@@ -58,13 +58,13 @@ test-frontend:
 # ==============================================================================
 
 clean:
-	@echo "⚠️  Cleaning up ALL Docker resources..."
+	@echo "Cleaning up ALL Docker resources..."
 	$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down -v --remove-orphans
 	docker system prune -f
-	@echo "🧹 Cleaning Python cache..."
+	@echo "Cleaning Python cache..."
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name ".coverage" -delete
-	@echo "🧹 Cleaning Node modules..."
+	@echo "Cleaning Node modules..."
 	rm -rf $(FRONTEND_DIR)/node_modules
 	@echo "✨ Clean complete."

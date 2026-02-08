@@ -62,13 +62,11 @@ jobs:
         if: always()
         run: make down
 
-  # ... (previous content remains the same) ...
-
   # ==============================================================================
   # JOB 2: Continuous Delivery (Artifact Generation)
   # ==============================================================================
   delivery:
-    name: 📦 Build & Push Artifacts
+    name: Build & Push Artifacts
     needs: compliance_check
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
