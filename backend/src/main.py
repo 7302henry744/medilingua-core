@@ -4,6 +4,7 @@ Purpose: Initialize the FastAPI application with regulated middleware and health
 """
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
+from src.api.routes import router as api_router
 from pydantic import BaseModel
 import uvicorn
 
@@ -37,13 +38,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Routes Registration ---
+app.include_router(api_router, prefix="/api/v1")
+
 # --- Models ---
 class HealthResponse(BaseModel):
     status: str
     version: str
     service: str
 
-# --- Routes ---
+# --- System Routes ---
 
 @app.get(
     "/health",

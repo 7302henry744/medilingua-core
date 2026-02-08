@@ -1,34 +1,33 @@
 # Stage 1: Builder
 FROM python:3.11-slim-bookworm AS builder
-
 WORKDIR /tmp
 RUN pip install uv
-
 COPY pyproject.toml .
-# Generate requirements.txt from pyproject.toml
 RUN uv pip compile pyproject.toml -o requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim-bookworm
-
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies for Pillow/Fonts
+RUN apt-get update && apt-get install -y \
+    fontconfig \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download specific font for reproducibility (Roboto Medium)
+# In a real air-gapped environment, this file would be COPY'd from a local assets folder
+RUN mkdir -p assets/fonts && \
+    curl -L -o assets/fonts/Roboto-Medium.ttf https://github.com/google/fonts/raw/main/apache/roboto/Roboto-Medium.ttf
+
 COPY --from=builder /tmp/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
-# We copy strict folders to ensure structure is maintained
 COPY src/ ./src/
-# Create an empty tests folder if not mapped, to prevent import errors if tools look for it
 RUN mkdir -p tests
 
-# Create non-root user for security (Simulates regulated environment best practice)
 RUN useradd -m medilingua
 USER medilingua
 
-# Expose port
 EXPOSE 8000
-
-# Command
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
